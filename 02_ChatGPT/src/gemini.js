@@ -1,12 +1,8 @@
-const api = "AIzaSyDgWp7VK7qL32CTSblZECZRD66XMFZsMcM";
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-import {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(api);
+const genAI = new GoogleGenerativeAI(apiKey);
 
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
@@ -21,14 +17,19 @@ const generationConfig = {
 };
 
 async function run(prompt) {
-  const chatSession = model.startChat({
-    generationConfig,
-    history: [],
-  });
+  try {
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [],
+    });
 
-  const result = await chatSession.sendMessage(prompt);
-  console.log(result.response.text());
-  return result.response.text();
+    const result = await chatSession.sendMessage(prompt);
+    console.log(result.response.text());
+    return result.response.text();
+  } catch (error) {
+    console.error("Error in Gemini API:", error);
+    return "Error: Unable to get response from Gemini API.";
+  }
 }
 
 export default run;
