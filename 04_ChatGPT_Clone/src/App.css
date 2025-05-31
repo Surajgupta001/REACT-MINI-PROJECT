@@ -1,3 +1,36 @@
+/* Define CSS Variables for themes using data-theme attribute on html */
+html[data-theme='dark'] {
+  --bg-primary: #202123;
+  --bg-secondary: #343541;
+  --bg-tertiary: #2c2d30; /* For elements like input fields */
+  --bg-accent: #40414f; /* For headers, active items */
+  --text-primary: #e9ecef;
+  --text-secondary: #adb5bd;
+  --border-color: #495057;
+  --button-primary-bg: #007bff;
+  --button-primary-hover-bg: #0056b3;
+  --shadow-color: rgba(0,0,0,0.1);
+  --error-bg: #dc3545; /* Error background for dark theme */
+  --error-text: white; /* Error text for dark theme */
+  --warning-text: #ffc107; /* Warning text for dark theme */
+}
+
+html[data-theme='light'] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-accent: #dee2e6;
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --border-color: #ced4da;
+  --button-primary-bg: #007bff;
+  --button-primary-hover-bg: #0056b3;
+  --shadow-color: rgba(0,0,0,0.05);
+  --error-bg: #f8d7da; /* Error background for light theme */
+  --error-text: #721c24; /* Error text for light theme */
+  --warning-text: #856404; /* Warning text for light theme */
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,12 +38,15 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #343541; /* Matching ChatWindow background */
+  background-color: var(--bg-secondary); /* Apply theme */
+  color: var(--text-primary); /* Apply theme */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app-container {
   display: flex;
   height: 100vh;
   width: 100vw;
-  overflow: hidden; /* Prevents scrollbars on the body */
+  overflow: hidden;
+  /* background-color and color will be inherited from body or set by specific components */
 }

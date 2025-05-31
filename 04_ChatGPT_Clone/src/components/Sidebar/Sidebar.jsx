@@ -1,5 +1,6 @@
-import React, { useContext } from 'react'; // Added useContext
-import { AppContext } from '../../context/Context'; // Import AppContext
+import React, { useContext } from 'react';
+import { AppContext } from '../../context/Context';
+import { FiSun, FiMoon } from 'react-icons/fi'; // Import icons for theme toggle
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -8,8 +9,9 @@ const Sidebar = () => {
     chats,
     activeChatId,
     newChat,
-    selectChat,
-    // renameChat // We can add rename functionality later if needed
+    selectChat
+    // theme,      // Removed as toggle button is moved
+    // toggleTheme // Removed as toggle button is moved
   } = useContext(AppContext);
 
   const handleNewChat = () => {
@@ -68,21 +70,7 @@ const Sidebar = () => {
         </ul>
       </div>
       <div className="sidebar-footer">
-        {/* User Profile Section */}
-        <div className="user-profile-placeholder">
-          <div className="user-info">
-            <span className="user-avatar">SG</span>
-            <span className="user-name">SURAJ GUPTA</span>
-          </div>
-          <button
-            className="settings-button"
-            aria-label="Settings"
-            title="Settings"
-            onClick={() => console.log("Settings button clicked - UI only")} // Placeholder action
-          >
-            ⚙️
-          </button>
-        </div>
+        {/* User Profile Section and Theme Toggle Button removed as they will be moved to ChatHeader */}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react'; // Added useEffect
 
 import { runChat } from '../gemini'; // Import runChat from gemini.js
 
@@ -11,8 +11,17 @@ const AppProvider = ({ children }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isListening, setIsListening] = useState(false); // For voice dictation
-  const [speechRecognitionError, setSpeechRecognitionError] = useState(null); // To store any speech recognition errors
+  const [isListening, setIsListening] = useState(false);
+  const [speechRecognitionError, setSpeechRecognitionError] = useState(null);
+  const [theme, setTheme] = useState('dark'); // Re-add theme state
+
+  const toggleTheme = () => { // Re-add toggleTheme function
+    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+
+  useEffect(() => { // Re-add useEffect for theme application
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const getActiveChatMessages = () => {
     const activeChat = chats.find(chat => chat.id === activeChatId);
@@ -105,10 +114,12 @@ const AppProvider = ({ children }) => {
       newChat,
       selectChat,
       renameChat,
-      isListening,          // Added
-      setIsListening,       // Added
-      speechRecognitionError, // Added
-      setSpeechRecognitionError // Added
+      isListening,
+      setIsListening,
+      speechRecognitionError,
+      setSpeechRecognitionError,
+      theme,                // Provide theme
+      toggleTheme           // Provide toggleTheme
     }}>
       {children}
     </AppContext.Provider>

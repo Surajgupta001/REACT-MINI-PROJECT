@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef } from 'react';
 import { AppContext } from '../../context/Context';
-import { FiPaperclip, FiSend, FiMic } from 'react-icons/fi'; // Import icons
+import { FiPaperclip, FiSend, FiMic, FiSun, FiMoon, FiSettings } from 'react-icons/fi'; // Added FiSun, FiMoon, FiSettings
 import './ChatWindow.css';
 
 const ChatWindow = () => {
@@ -15,11 +15,17 @@ const ChatWindow = () => {
     isSidebarOpen,
     setIsSidebarOpen,
     activeChatId,
-    isListening,          // Added from context
-    setIsListening,       // Added from context
-    speechRecognitionError, // Added from context
-    setSpeechRecognitionError // Added from context
+    isListening,
+    setIsListening,
+    speechRecognitionError,
+    setSpeechRecognitionError,
+    theme,                // Added for theme toggle
+    toggleTheme           // Added for theme toggle
   } = useContext(AppContext);
+
+  // User details hardcoded for now
+  const userName = "SURAJ GUPTA";
+  const userAvatarInitials = "SG";
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -202,10 +208,31 @@ const ChatWindow = () => {
   return (
     <div className={`chat-window ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
       <div className="chat-header">
-        <button className="menu-toggle-button" onClick={toggleSidebar} aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}>
-          {isSidebarOpen ? '✕' : '☰'}
-        </button>
-        <h3>Smart AI Bot</h3>
+        <div className="chat-header-left">
+          <button className="menu-toggle-button" onClick={toggleSidebar} aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}>
+            {isSidebarOpen ? '✕' : '☰'}
+          </button>
+          <h3>Smart AI</h3> {/* Reverted to Smart AI or keep Smart AI Bot as preferred */}
+        </div>
+        <div className="chat-header-right">
+          <button onClick={toggleTheme} className="theme-toggle-button-header" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+            {theme === 'dark' ? <FiSun size="1.1em"/> : <FiMoon size="1.1em"/>}
+          </button>
+          <div className="user-profile-header">
+            <span className="user-avatar-header">{userAvatarInitials}</span>
+            <span className="user-name-header">{userName}</span>
+            {/* Settings icon can be re-added here if desired in future
+            <button
+              className="settings-button-header"
+              aria-label="Settings"
+              title="Settings"
+              onClick={() => console.log("Header Settings clicked - UI only")}
+            >
+              <FiSettings size="1.1em"/>
+            </button>
+            */}
+          </div>
+        </div>
       </div>
 
       {currentMessages.length === 0 && !isLoading ? (
@@ -252,7 +279,7 @@ const ChatWindow = () => {
           ))}
           {isLoading && (
             <div className="message bot typing-indicator">
-              <p>Lyzo is thinking...</p>
+              <p>Smart Ai is thinking...</p>
             </div>
           )}
           <div ref={messagesEndRef} />
