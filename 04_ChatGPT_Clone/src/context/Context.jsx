@@ -57,6 +57,24 @@ const AppProvider = ({ children }) => {
     );
   };
 
+  const deleteChat = (chatIdToDelete) => {
+    setChats(prevChats => {
+      const updatedChats = prevChats.filter(chat => chat.id !== chatIdToDelete);
+      if (activeChatId === chatIdToDelete) {
+        if (updatedChats.length > 0) {
+          setActiveChatId(updatedChats[0].id);
+        } else {
+          // If no chats are left, create a new one
+          const newChatId = Date.now();
+          const newChatName = "New Chat 1";
+          setActiveChatId(newChatId);
+          return [{ id: newChatId, name: newChatName, messages: [] }];
+        }
+      }
+      return updatedChats;
+    });
+  };
+
   // Updated sendMessage to accept an optional file object
   const sendMessage = async (messageText, currentFileObject = null) => {
     // Ensure there's either text or a file to send
@@ -114,6 +132,7 @@ const AppProvider = ({ children }) => {
       newChat,
       selectChat,
       renameChat,
+      deleteChat, // Add deleteChat to context
       isListening,
       setIsListening,
       speechRecognitionError,

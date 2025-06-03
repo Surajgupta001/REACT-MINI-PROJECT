@@ -126,9 +126,24 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-grow: 1; /* Allow chat name to take available space */
 }
 
-.rename-chat-button {
+.chat-actions {
+  display: flex;
+  align-items: center;
+  visibility: hidden; /* Initially hidden */
+  opacity: 0;
+  transition: visibility 0s linear 0.1s, opacity 0.1s ease-in-out;
+}
+
+.chat-list-item:hover .chat-actions {
+  visibility: visible;
+  opacity: 1;
+}
+
+.rename-chat-button,
+.delete-chat-button {
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -136,20 +151,44 @@
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
-  visibility: hidden;
-  opacity: 0;
-  transition: visibility 0s linear 0.1s, opacity 0.1s ease-in-out, color 0.2s ease-in-out;
+  margin-left: 5px; /* Add some space between buttons */
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
-.chat-list-item:hover .rename-chat-button {
-  visibility: visible;
-  opacity: 1;
-}
-
-.rename-chat-button:hover {
+.rename-chat-button:hover,
+.delete-chat-button:hover {
   color: var(--text-primary);
   background-color: var(--bg-accent);
 }
+
+.delete-chat-button svg { /* Style for the react-icon */
+  vertical-align: middle;
+}
+
+
+.rename-chat-button {
+  /* Keep existing styles or adjust if needed, visibility is now handled by .chat-actions */
+  /* background: none; */
+  /* border: none; */
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  /* visibility: hidden; */ /* Handled by .chat-actions */
+  /* opacity: 0; */ /* Handled by .chat-actions */
+  /* transition: visibility 0s linear 0.1s, opacity 0.1s ease-in-out, color 0.2s ease-in-out; */ /* Simplified transition */
+}
+
+/* .chat-list-item:hover .rename-chat-button { */ /* Handled by .chat-actions */
+  /* visibility: visible; */
+  /* opacity: 1; */
+/* } */
+
+/* .rename-chat-button:hover { */ /* Combined with .delete-chat-button:hover */
+  /* color: var(--text-primary); */
+  /* background-color: var(--bg-accent); */
+/* } */
 
 .sidebar-footer {
   padding: 15px;
