@@ -3,9 +3,9 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--bg-secondary);
+  background: var(--bg-secondary); /* Changed to background for gradient */
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease; /* Adjusted transition property */
 }
 
 .chat-header {
@@ -14,10 +14,12 @@
   align-items: center;
   padding: 10px 20px; /* Adjusted padding */
   border-bottom: 1px solid var(--border-color);
-  background-color: var(--bg-primary); /* Use primary for header for more distinction */
+  background: var(--bg-primary); /* Changed to background for potential gradient/transparent header */
   box-shadow: 0 1px 3px var(--shadow-color);
   height: 60px; /* Define a fixed header height */
   box-sizing: border-box;
+  -webkit-backdrop-filter: blur(5px); /* For Safari */
+  backdrop-filter: blur(5px); /* Optional: Adds a blur effect if header is semi-transparent */
 }
 
 .chat-header-left {
@@ -391,25 +393,58 @@
   background-color: var(--button-primary-hover-bg);
 }
 
-.send-mic-button:not(.has-content) {
+/* Default style for mic button (when no input and not sending) */
+.send-mic-button {
   background: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
 }
 
-.send-mic-button:not(.has-content):hover {
+.send-mic-button:hover:not(.listening):not(.has-content) {
   background-color: var(--bg-accent);
   border-color: var(--text-secondary);
   color: var(--text-primary);
 }
 
+/* Style for send button (when there is input or a file) */
+.send-mic-button.has-content {
+  background-color: var(--button-primary-bg);
+  color: white;
+  border: none; /* Send button usually doesn't have a border */
+}
+
+.send-mic-button.has-content:hover {
+  background-color: var(--button-primary-hover-bg);
+}
+
+
 .send-mic-button.listening {
-  background-color: #dc3545 !important; 
+  background-color: #dc3545 !important; /* Red for recording */
   border-color: #c82333 !important;
   color: white !important;
   box-shadow: 0 0 8px rgba(220, 53, 69, 0.7);
-  transform: scale(1.1);
+  transform: scale(1.05); /* Slight scale up */
 }
+
+.send-mic-button.listening .mic-icon-recording {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 
 .send-mic-button:disabled {
   background-color: var(--bg-accent) !important;
@@ -420,7 +455,6 @@
   box-shadow: none;
   transform: scale(1);
 }
-
 .speech-error-message {
   color: var(--warning-text); 
   font-size: 0.85em;

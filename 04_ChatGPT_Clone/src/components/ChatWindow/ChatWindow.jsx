@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef } from 'react';
 import { AppContext } from '../../context/Context';
-import { FiPaperclip, FiSend, FiMic, FiSun, FiMoon, FiSettings } from 'react-icons/fi'; // Added FiSun, FiMoon, FiSettings
+import { FiPaperclip, FiSend, FiSun, FiMoon, FiSettings, FiMic } from 'react-icons/fi';
 import './ChatWindow.css';
 
 const ChatWindow = () => {
@@ -15,13 +15,14 @@ const ChatWindow = () => {
     isSidebarOpen,
     setIsSidebarOpen,
     activeChatId,
-    isListening,
-    setIsListening,
-    speechRecognitionError,
-    setSpeechRecognitionError,
-    theme,                // Added for theme toggle
-    toggleTheme           // Added for theme toggle
+    theme,
+    toggleTheme,
+    typingBotMessage
   } = useContext(AppContext);
+
+  const [isListening, setIsListening] = React.useState(false);
+  const [speechRecognitionError, setSpeechRecognitionError] = React.useState(null);
+  const recognitionRef = React.useRef(null);
 
   // User details hardcoded for now
   const userName = "SURAJ GUPTA";
@@ -30,42 +31,31 @@ const ChatWindow = () => {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const currentMessages = getActiveChatMessages();
-  const recognitionRef = useRef(null); // For SpeechRecognition instance
 
-  // --- Speech Recognition Logic ---
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setSpeechRecognitionError("Speech recognition is not supported by your browser.");
+      setSpeechRecognitionError("Speech recognition not supported in this browser.");
       return;
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.continuous = false; // Stop after first pause
-    recognitionRef.current.interimResults = true; // Get interim results
-    recognitionRef.current.lang = 'en-US'; // Set language
-
-    recognitionRef.current.onstart = () => {
-      setIsListening(true);
-      setSpeechRecognitionError(null);
-    };
+    recognitionRef.current.continuous = true; // Changed to true
+    recognitionRef.current.interimResults = false; // We only want final results
+    recognitionRef.current.lang = 'en-US';
 
     recognitionRef.current.onresult = (event) => {
-      let interimTranscript = '';
+      // Iterate through results to find the final one
       let finalTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript;
         }
-        else {
-          interimTranscript += event.results[i][0].transcript;
-        }
       }
-      // Update input with interim, then final. Prioritize final.
-      setInput(prevInput => (finalTranscript || interimTranscript) ? (prevInput ? prevInput + " " : "") + (finalTranscript || interimTranscript) : prevInput);
-      if (finalTranscript) {
-        // If you want to auto-send after final transcript:
-        // handleSend(); // Be cautious with auto-send, might be unexpected for users
+
+      if (finalTranscript.trim()) {
+        setInput(prevInput => prevInput ? prevInput + ' ' + finalTranscript.trim() : finalTranscript.trim());
+        recognitionRef.current?.stop(); // Stop recognition after a final result
       }
     };
 
@@ -73,52 +63,48 @@ const ChatWindow = () => {
       console.error("Speech recognition error:", event.error);
       if (event.error === 'no-speech') {
         setSpeechRecognitionError("No speech detected. Please try again.");
-      }
-      else if (event.error === 'audio-capture') {
-        setSpeechRecognitionError("Microphone problem. Please ensure it's enabled and working.");
-      }
-      else if (event.error === 'not-allowed') {
-        setSpeechRecognitionError("Permission to use microphone was denied. Please enable it in your browser settings.");
-      }
-      else {
+      } else if (event.error === 'audio-capture') {
+        setSpeechRecognitionError("Audio capture failed. Ensure microphone is enabled.");
+      } else if (event.error === 'not-allowed') {
+        setSpeechRecognitionError("Microphone access denied. Please allow microphone access in browser settings.");
+      } else {
         setSpeechRecognitionError(`Error: ${event.error}`);
       }
-      setIsListening(false);
+      // onend will handle setIsListening(false)
     };
 
     recognitionRef.current.onend = () => {
-      setIsListening(false);
+      setIsListening(false); // Central place to set listening to false
     };
 
-    // Cleanup function to stop recognition if component unmounts while listening
     return () => {
-      if (recognitionRef.current && isListening) {
-        recognitionRef.current.stop();
+      if (recognitionRef.current) {
+        recognitionRef.current.abort(); // Use abort for cleanup
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount to setup recognition
+  }, [setInput]);
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      setSpeechRecognitionError("Speech recognition not initialized.");
-      return;
-    }
+
+  const handleMicClick = () => {
     if (isListening) {
-      recognitionRef.current.stop();
+      recognitionRef.current?.stop(); // User explicitly stops
     } else {
-      try {
-        recognitionRef.current.start();
-      } catch (e) {
-        // This can happen if start() is called too soon after a stop, or other issues.
-        console.error("Error starting speech recognition:", e);
-        setSpeechRecognitionError("Could not start voice recognition. Please try again.");
-        setIsListening(false);
+      if (recognitionRef.current) {
+        try {
+          setInput(''); // Clear previous input before starting new dictation
+          setSpeechRecognitionError(null); // Clear previous errors
+          recognitionRef.current.start();
+          setIsListening(true);
+        } catch (error) {
+          console.error("Error starting speech recognition:", error);
+          setSpeechRecognitionError("Could not start voice recording. Please check microphone permissions.");
+          setIsListening(false); // Ensure state is reset if start fails
+        }
+      } else {
+        setSpeechRecognitionError("Speech recognition is not initialized.");
       }
     }
   };
-  // --- End Speech Recognition Logic ---
-
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -282,6 +268,11 @@ const ChatWindow = () => {
               <p>Smart Ai is thinking...</p>
             </div>
           )}
+          {typingBotMessage && (
+            <div key={typingBotMessage.id} className={`message ${typingBotMessage.sender}`}>
+              {renderBotMessageContent(typingBotMessage.text)}
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       )}
@@ -302,14 +293,14 @@ const ChatWindow = () => {
           onChange={handleFileChange}
           accept="image/*,application/pdf,.txt,.md,.py,.js,.html,.css,.json,.csv"
           style={{ display: 'none' }}
-          disabled={isLoading || isListening} // Disable if listening
+          disabled={isLoading || isListening}
         />
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => {
-            if (e.key === 'Enter' && !isLoading && !isListening && (input.trim() || selectedFile)) {
+            if (e.key === 'Enter' && !isListening && (input.trim() || selectedFile)) {
               handleSend();
             }
           }}
@@ -320,30 +311,39 @@ const ChatWindow = () => {
           }
           disabled={isLoading || isListening}
         />
-        <button
-          className={`send-mic-button ${isListening ? 'listening' : ''} ${(input.trim() || selectedFile) ? 'has-content' : ''}`}
-          onClick={() => {
-            if (input.trim() || selectedFile) {
-              handleSend();
-            } else {
-              toggleListening();
-            }
-          }}
-          aria-label={
-            (input.trim() || selectedFile) ? "Send message" :
-            isListening ? "Stop listening" : "Start voice dictation"
-          }
-          title={
-            (input.trim() || selectedFile) ? "Send message" :
-            isListening ? "Stop listening" : "Start voice dictation"
-          }
-          disabled={isLoading || (isListening && !!speechRecognitionError && !speechRecognitionError.includes("Permission")) || (!input.trim() && !selectedFile && !!speechRecognitionError && !speechRecognitionError.includes("Permission"))}
-        >
-          {(input.trim() || selectedFile) ? <FiSend /> : <FiMic />} {/* Correctly uses imported icons */}
-        </button>
+        {isListening ? (
+           <button
+             className="send-mic-button listening"
+             onClick={handleMicClick}
+             aria-label="Stop recording"
+             title="Stop recording"
+           >
+             <FiMic className="mic-icon-recording" /> {/* Add class for animation */}
+           </button>
+        ) : (input.trim() || selectedFile) ? (
+          <button
+            className="send-mic-button has-content"
+            onClick={handleSend}
+            aria-label="Send message"
+            title="Send message"
+            disabled={isLoading || isListening}
+          >
+            <FiSend />
+          </button>
+        ) : (
+          <button
+            className="send-mic-button"
+            onClick={handleMicClick}
+            aria-label="Start recording"
+            title="Start recording"
+            disabled={isLoading || !!speechRecognitionError} // Disable if error or loading
+          >
+            <FiMic />
+          </button>
+        )}
       </div>
       {speechRecognitionError && <p className="speech-error-message">{speechRecognitionError}</p>}
-      {selectedFile && !isLoading && (
+      {selectedFile && !isLoading && !isListening && (
         <div className="file-preview-area">
           {selectedFile.type.startsWith('image/') ? (
             <img src={URL.createObjectURL(selectedFile.file)} alt="Preview" />

@@ -11,9 +11,10 @@ const AppProvider = ({ children }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isListening, setIsListening] = useState(false);
-  const [speechRecognitionError, setSpeechRecognitionError] = useState(null);
+  // const [isListening, setIsListening] = useState(false); // Removed
+  // const [speechRecognitionError, setSpeechRecognitionError] = useState(null); // Removed
   const [theme, setTheme] = useState('dark'); // Re-add theme state
+  const [typingBotMessage, setTypingBotMessage] = useState(null); // For typing effect
 
   const toggleTheme = () => { // Re-add toggleTheme function
     setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
@@ -102,11 +103,39 @@ const AppProvider = ({ children }) => {
     try {
       // Pass both text and the actual File object to runChat
       const botResponseText = await runChat(messageText, currentFileObject ? currentFileObject.file : null);
-      const botMessage = { text: botResponseText, sender: 'bot' };
-      addMessageToActiveChat(botMessage);
+      
+      if (botResponseText && botResponseText.length > 0) {
+        // Start typing effect
+        // Set the first character immediately
+        setTypingBotMessage({ text: botResponseText.charAt(0), sender: 'bot', id: `bot-${Date.now()}` });
+        
+        let i = 1; // Start from the second character
+        const typingInterval = setInterval(() => {
+          if (i < botResponseText.length) {
+            setTypingBotMessage(prev => ({ ...prev, text: prev.text + botResponseText.charAt(i) }));
+            i++;
+          } else {
+            clearInterval(typingInterval);
+            // The final message is already built up by the typing effect.
+            // We just need to ensure it's formally added to chats if a distinction is needed,
+            // or simply clear the typingBotMessage.
+            // For simplicity, let's assume the displayed typingBotMessage is sufficient
+            // and the final addMessageToActiveChat will solidify it.
+            const finalBotMessage = { text: botResponseText, sender: 'bot', id: `bot-${Date.now()}-final` };
+            addMessageToActiveChat(finalBotMessage); // Add the complete message to history
+            setTypingBotMessage(null); // Clear the actively typing message
+          }
+        }, 20); // Typing speed: 20ms per character (faster)
+      } else {
+        // Handle empty or null bot response if necessary
+        const botMessage = { text: botResponseText || "", sender: 'bot' }; // Ensure text is at least an empty string
+        addMessageToActiveChat(botMessage);
+      }
+
     }
     catch (error) {
       console.error("Error sending message via Context:", error);
+      setTypingBotMessage(null); // Clear typing message on error
       const errorMessageText = error.message.includes("API key") ? error.message : "Sorry, I couldn't get a response. Please try again.";
       const errorMessage = { text: errorMessageText, sender: 'bot', error: true };
       addMessageToActiveChat(errorMessage);
@@ -133,12 +162,13 @@ const AppProvider = ({ children }) => {
       selectChat,
       renameChat,
       deleteChat, // Add deleteChat to context
-      isListening,
-      setIsListening,
-      speechRecognitionError,
-      setSpeechRecognitionError,
+      // isListening, // Removed
+      // setIsListening, // Removed
+      // speechRecognitionError, // Removed
+      // setSpeechRecognitionError, // Removed
       theme,                // Provide theme
-      toggleTheme           // Provide toggleTheme
+      toggleTheme,           // Provide toggleTheme
+      typingBotMessage      // Provide typingBotMessage
     }}>
       {children}
     </AppContext.Provider>
