@@ -1,0 +1,132 @@
+.message-list {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.message-item-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 85%;
+}
+
+.message-item-wrapper.sent-wrapper {
+  align-self: flex-end;
+  flex-direction: row;
+}
+
+.message-item-wrapper.received-wrapper {
+  align-self: flex-start;
+  flex-direction: row;
+}
+
+.avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.message-item {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 15px;
+  border-radius: 18px;
+  line-height: 1.4;
+  position: relative;
+  max-width: calc(100% - 43px); /* Adjust based on avatar size and gap */
+}
+
+.message-item.sent {
+  background: linear-gradient(to right, #00c6ff, #0072ff);
+  color: white;
+  border-bottom-right-radius: 5px;
+}
+
+.message-item.received {
+  background-color: #e9e9eb;
+  color: #333;
+  border-bottom-left-radius: 5px;
+}
+
+.message-item.failed-message-item {
+  background-color: #ffebee; /* Light red for failed messages */
+  border: 1px solid #ffcdd2;
+  color: #c62828; /* Darker red text for contrast */
+}
+.message-item.failed-message-item .message-time {
+  color: #c62828;
+}
+
+.message-content p {
+  margin: 0;
+  word-wrap: break-word;
+}
+
+.message-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-icon {
+  font-size: 1.2em;
+  color: #c62828; 
+}
+.message-error p {
+  margin: 0;
+  font-size: 0.9em;
+}
+.message-error small {
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.message-time {
+  font-size: 0.75em;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 5px;
+  align-self: flex-end;
+}
+
+.message-item.sent .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message-sender {
+  font-size: 0.8em;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.message-item.received .message-sender {
+  color: #0072ff;
+}
+
+/* Scrollbar styling */
+.message-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.message-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.message-list::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 10px;
+}
+
+.message-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

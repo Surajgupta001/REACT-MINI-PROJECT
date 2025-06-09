@@ -1,0 +1,58 @@
+.login-section {
+  display: flex; /* Arrange children (select, button) in a row */
+  align-items: center; /* Vertically align children if they have different heights */
+  /* justify-content: center; --- REMOVED This to let parent control centering of this block */
+  gap: 8px;
+  flex-wrap: wrap; 
+}
+
+.login-section select {
+  padding: 7px 10px;
+  border-radius: 18px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  font-size: 0.85em;
+  min-width: 90px; 
+}
+
+.login-section select:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+.login-section button {
+  background-color: #fff;
+  color: #7f00ff;
+  border: none;
+  padding: 7px 12px;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85em;
+  transition: background-color 0.3s, color 0.3s;
+  white-space: nowrap;
+}
+
+.login-section button:hover:not(:disabled) {
+  background-color: #f0f0f0;
+  color: #5e00b3;
+}
+
+.login-section button:disabled {
+  background-color: #e9ecef;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .login-section {
+    gap: 5px;
+    /* justify-content: center; --- REMOVED, parent will handle */
+  }
+  .login-section select, .login-section button {
+    font-size: 0.8em;
+    padding: 6px 10px;
+  }
+}
