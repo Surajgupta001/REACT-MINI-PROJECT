@@ -20,8 +20,6 @@ const PromptForm = () => {
 
   const handleSuggestionClick = (suggestion) => {
     setPrompt(suggestion);
-    // Optionally, you could also trigger generation on suggestion click:
-    // handleGenerateImage(suggestion);
   };
 
   return (
