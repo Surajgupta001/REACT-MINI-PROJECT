@@ -1,0 +1,44 @@
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 35px; /* Increased margin */
+  padding: 25px 30px; /* Increased padding */
+  background-color: var(--card-background);
+  border-radius: 16px; /* More rounded corners */
+  box-shadow: var(--card-shadow);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.loader {
+  border: 7px solid rgba(var(--loader-color), 0.2); /* Lighter track with opacity */
+  border-top: 7px solid var(--loader-color); /* Use CSS variable */
+  border-radius: 50%;
+  width: 60px; /* Slightly larger */
+  height: 60px; /* Slightly larger */
+  animation: spin 1.2s linear infinite; /* Slightly slower spin */
+  margin-bottom: 20px; /* Increased margin */
+}
+
+.loader-container p {
+  font-size: 1.2em; /* Larger font */
+  color: var(--text-color);
+  font-weight: 500;
+  letter-spacing: 0.5px; /* Add some letter spacing */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark mode specific adjustments */
+.dark-mode .loader {
+  border: 7px solid rgba(var(--loader-color), 0.25); /* Adjusted opacity for dark mode */
+  border-top: 7px solid var(--loader-color);
+}

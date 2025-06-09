@@ -1,0 +1,82 @@
+.app-header {
+  background: var(--primary-gradient); /* Apply gradient to header */
+  color: var(--button-text-color); /* Ensure text is readable on gradient */
+  padding: 20px 35px; /* Increased padding */
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Enhanced shadow */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.5s ease; /* Smooth transition for gradient */
+  position: sticky; /* Make header sticky */
+  top: 0;
+  z-index: 1000; /* Ensure header is above other content */
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2em; /* Slightly larger font */
+  font-weight: 700; /* Bolder */
+  letter-spacing: 1px; /* Add some letter spacing */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2); /* Subtle text shadow */
+}
+
+.theme-switcher {
+  display: flex;
+  align-items: center;
+}
+
+.theme-toggle-button {
+  background: var(--button-gradient);
+  color: var(--button-text-color);
+  border: none;
+  padding: 10px 20px; /* Increased padding */
+  border-radius: 25px; /* More rounded */
+  cursor: pointer;
+  font-size: 0.95em; /* Slightly larger */
+  font-weight: 500;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.theme-toggle-button:hover {
+  background: var(--button-hover-gradient);
+  transform: translateY(-2px) scale(1.02); /* More pronounced hover effect */
+  box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+}
+
+.dark-mode .theme-toggle-button {
+  background: var(--button-gradient); /* Use the dark mode button gradient */
+  color: var(--button-text-color); /* Use the dark mode button text color */
+  /* border: 1px solid var(--primary-color-end); Optional: if you want a border */
+}
+
+.dark-mode .theme-toggle-button:hover {
+  background: var(--button-hover-gradient);
+  /* color will remain as defined by --button-text-color in .dark-mode */
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 15px 20px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .app-header h1 {
+    font-size: 1.5em;
+  }
+
+  .theme-toggle-button {
+    font-size: 0.8em;
+    padding: 7px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 1.3em;
+  }
+}
