@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    /* Common base styles */
+    @apply min-h-screen font-sans transition-colors duration-300;
+
+    /* Dark theme with deep gradient */
+    @apply bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-gray-200;
+  }
+}
