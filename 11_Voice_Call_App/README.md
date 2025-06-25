@@ -1,5 +1,15 @@
 # React + Vite
 
+> **⚠️ SECURITY WARNING:**
+> - Never commit your `.env` file to version control (it is already in `.gitignore`).
+> - Only share `.env.example` as a template—never your real secrets.
+> - Do not use secrets (like `SERVER_SECRET`) with the `VITE_` prefix; these are exposed to the browser.
+> - Always generate sensitive tokens on the server, not in client-side code.
+
+## Environment Variables
+- Copy `.env.example` to `.env` and fill in your values.
+- Only `VITE_APP_ID` is safe for client-side use. Keep `SERVER_SECRET` on the server.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
