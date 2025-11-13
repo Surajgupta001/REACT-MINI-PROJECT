@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { AppContext } from '../../context/Context';
-import { FiPaperclip, FiSend, FiSun, FiMoon, FiSettings, FiMic } from 'react-icons/fi';
+import { FiPaperclip, FiSend, FiSun, FiMoon, FiSettings, FiMic, FiSquare } from 'react-icons/fi';
 import './ChatWindow.css';
 
 const ChatWindow = () => {
@@ -12,6 +14,7 @@ const ChatWindow = () => {
     setSelectedFile,
     isLoading,
     sendMessage,
+    stopGeneration,
     isSidebarOpen,
     setIsSidebarOpen,
     activeChatId,
@@ -115,8 +118,9 @@ const ChatWindow = () => {
   };
 
   useEffect(() => {
+    // Auto-scroll whenever messages change, chat changes, typing updates, or loading toggles
     scrollToBottom();
-  }, [currentMessages, activeChatId]);
+  }, [currentMessages, activeChatId, typingBotMessage, isLoading]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -126,54 +130,12 @@ const ChatWindow = () => {
     }
   };
 
-  // Helper function to render bot messages with list formatting
-  const renderBotMessageContent = (text) => {
-    if (!text || typeof text !== 'string') {
-      return <p>{text}</p>; // Fallback for non-string or empty text
-    }
-
-    const lines = text.split('\n');
-    const elements = [];
-    let currentListType = null; // 'ul' or 'ol'
-    let listItems = [];
-
-    const flushList = () => {
-      if (listItems.length > 0) {
-        if (currentListType === 'ul') {
-          elements.push(<ul key={`ul-${elements.length}`}>{listItems}</ul>);
-        } else if (currentListType === 'ol') {
-          elements.push(<ol key={`ol-${elements.length}`}>{listItems}</ol>);
-        }
-        listItems = [];
-      }
-      currentListType = null;
-    };
-
-    lines.forEach((line, index) => {
-      const key = `line-${index}`;
-      if (line.match(/^(\*|-)\s+/)) { // Unordered list item
-        if (currentListType !== 'ul') {
-          flushList();
-          currentListType = 'ul';
-        }
-        listItems.push(<li key={key}>{line.substring(2)}</li>);
-      } else if (line.match(/^\d+\.\s+/)) { // Ordered list item
-        if (currentListType !== 'ol') {
-          flushList();
-          currentListType = 'ol';
-        }
-        listItems.push(<li key={key}>{line.substring(line.indexOf('.') + 2)}</li>);
-      } else { // Paragraph
-        flushList();
-        if (line.trim() !== '') { // Avoid empty paragraphs
-          elements.push(<p key={key}>{line}</p>);
-        }
-      }
-    });
-
-    flushList(); // Add any remaining list items
-    return elements;
-  };
+  // ReactMarkdown will render bot messages with Markdown including lists and tables
+  const renderBotMessageContent = (text) => (
+    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      {typeof text === 'string' ? text : String(text ?? '')}
+    </ReactMarkdown>
+  );
 
   const handleSend = () => {
     if (input.trim() || selectedFile) {
@@ -311,7 +273,16 @@ const ChatWindow = () => {
           }
           disabled={isLoading || isListening}
         />
-        {isListening ? (
+        {isLoading || typingBotMessage ? (
+          <button
+            className="send-mic-button has-content"
+            onClick={stopGeneration}
+            aria-label="Stop response"
+            title="Stop response"
+          >
+            <FiSquare />
+          </button>
+        ) : isListening ? (
            <button
              className="send-mic-button listening"
              onClick={handleMicClick}

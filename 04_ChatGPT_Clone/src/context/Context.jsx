@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react'; // Added useEffect
+import React, { createContext, useState, useEffect, useRef } from 'react'; // Added useEffect and useRef
 
 import { runChat } from '../gemini'; // Import runChat from gemini.js
 
@@ -15,6 +15,53 @@ const AppProvider = ({ children }) => {
   // const [speechRecognitionError, setSpeechRecognitionError] = useState(null); // Removed
   const [theme, setTheme] = useState('dark'); // Re-add theme state
   const [typingBotMessage, setTypingBotMessage] = useState(null); // For typing effect
+  const abortRef = useRef(null); // AbortController for in-flight request
+  const typingIntervalRef = useRef(null); // Interval handle for typing effect
+
+  // Local storage keys
+  const LS_CHATS_KEY = 'chatgpt_clone_chats';
+  const LS_ACTIVE_KEY = 'chatgpt_clone_activeChatId';
+  const LS_THEME_KEY = 'chatgpt_clone_theme';
+
+  // On mount: hydrate from localStorage if present
+  useEffect(() => {
+    try {
+      const storedChats = JSON.parse(localStorage.getItem(LS_CHATS_KEY) || 'null');
+      const storedActive = JSON.parse(localStorage.getItem(LS_ACTIVE_KEY) || 'null');
+      const storedTheme = localStorage.getItem(LS_THEME_KEY);
+
+      if (Array.isArray(storedChats) && storedChats.length > 0) {
+        setChats(storedChats);
+        if (storedActive) setActiveChatId(storedActive);
+      }
+      if (storedTheme === 'light' || storedTheme === 'dark') {
+        setTheme(storedTheme);
+      }
+    } catch (e) {
+      console.warn('Failed to load chats from storage:', e);
+    }
+  }, []);
+
+  // Helper to sanitize chats for storage (avoid storing blob preview URLs)
+  const sanitizeChatsForStorage = (chatsToSave) =>
+    chatsToSave.map(chat => ({
+      ...chat,
+      messages: (chat.messages || []).map(m => ({
+        ...m,
+        fileInfo: m.fileInfo ? { name: m.fileInfo.name, type: m.fileInfo.type, previewUrl: null } : null,
+      }))
+    }));
+
+  // Persist chats and active chat id on change
+  useEffect(() => {
+    try {
+      const sanitized = sanitizeChatsForStorage(chats);
+      localStorage.setItem(LS_CHATS_KEY, JSON.stringify(sanitized));
+      localStorage.setItem(LS_ACTIVE_KEY, JSON.stringify(activeChatId));
+    } catch (e) {
+      console.warn('Failed to save chats to storage:', e);
+    }
+  }, [chats, activeChatId]);
 
   const toggleTheme = () => { // Re-add toggleTheme function
     setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
@@ -22,6 +69,14 @@ const AppProvider = ({ children }) => {
 
   useEffect(() => { // Re-add useEffect for theme application
     document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+  // Persist theme
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_THEME_KEY, theme);
+    } catch {
+      // ignore persistence errors
+    }
   }, [theme]);
 
   const getActiveChatMessages = () => {
@@ -101,8 +156,16 @@ const AppProvider = ({ children }) => {
     setIsLoading(true);
 
     try {
+      // Set up abort controller so we can stop the request
+      const controller = new AbortController();
+      abortRef.current = controller;
+
       // Pass both text and the actual File object to runChat
-      const botResponseText = await runChat(messageText, currentFileObject ? currentFileObject.file : null);
+      const botResponseText = await runChat(
+        messageText,
+        currentFileObject ? currentFileObject.file : null,
+        { signal: controller.signal }
+      );
       
       if (botResponseText && botResponseText.length > 0) {
         // Start typing effect
@@ -116,6 +179,7 @@ const AppProvider = ({ children }) => {
             i++;
           } else {
             clearInterval(typingInterval);
+            typingIntervalRef.current = null;
             // The final message is already built up by the typing effect.
             // We just need to ensure it's formally added to chats if a distinction is needed,
             // or simply clear the typingBotMessage.
@@ -126,6 +190,7 @@ const AppProvider = ({ children }) => {
             setTypingBotMessage(null); // Clear the actively typing message
           }
         }, 20); // Typing speed: 20ms per character (faster)
+        typingIntervalRef.current = typingInterval;
       } else {
         // Handle empty or null bot response if necessary
         const botMessage = { text: botResponseText || "", sender: 'bot' }; // Ensure text is at least an empty string
@@ -136,13 +201,42 @@ const AppProvider = ({ children }) => {
     catch (error) {
       console.error("Error sending message via Context:", error);
       setTypingBotMessage(null); // Clear typing message on error
-      const errorMessageText = error.message.includes("API key") ? error.message : "Sorry, I couldn't get a response. Please try again.";
-      const errorMessage = { text: errorMessageText, sender: 'bot', error: true };
-      addMessageToActiveChat(errorMessage);
+      if (error.name === 'AbortError') {
+        // User stopped the generation; don't add an error message
+      } else {
+        const errorMessageText = error.message.includes("API key") ? error.message : "Sorry, I couldn't get a response. Please try again.";
+        const errorMessage = { text: errorMessageText, sender: 'bot', error: true };
+        addMessageToActiveChat(errorMessage);
+      }
     }
     finally {
       setIsLoading(false);
+      abortRef.current = null;
     }
+  };
+
+  const stopGeneration = () => {
+    // Abort in-flight fetch
+    if (abortRef.current) {
+      try {
+        abortRef.current.abort();
+      } catch {
+        // ignore
+      }
+      abortRef.current = null;
+    }
+    // Stop typing effect
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    // If there's a partially typed message, commit it to history so it doesn't disappear
+    if (typingBotMessage && typeof typingBotMessage.text === 'string' && typingBotMessage.text.trim().length > 0) {
+      const finalBotMessage = { text: typingBotMessage.text, sender: 'bot', id: `bot-${Date.now()}-stopped` };
+      addMessageToActiveChat(finalBotMessage);
+    }
+    setTypingBotMessage(null);
+    setIsLoading(false);
   };
 
   return (
@@ -162,6 +256,7 @@ const AppProvider = ({ children }) => {
       selectChat,
       renameChat,
       deleteChat, // Add deleteChat to context
+  stopGeneration,        // Provide stop control
       // isListening, // Removed
       // setIsListening, // Removed
       // speechRecognitionError, // Removed
