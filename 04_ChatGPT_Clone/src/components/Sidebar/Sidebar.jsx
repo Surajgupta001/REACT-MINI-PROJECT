@@ -10,7 +10,8 @@ const Sidebar = () => {
     activeChatId,
     newChat,
     selectChat,
-    deleteChat // Added deleteChat from context
+    deleteChat, // Added deleteChat from context
+    renameChat
     // theme,      // Removed as toggle button is moved
     // toggleTheme // Removed as toggle button is moved
   } = useContext(AppContext);
@@ -55,12 +56,10 @@ const Sidebar = () => {
                   className="rename-chat-button"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent chat selection when clicking rename
-                    // Placeholder for actual rename logic initiation
-                    console.log(`Rename chat: ${chat.name} (ID: ${chat.id}) - UI only`);
-                    // const newName = prompt("Enter new chat name:", chat.name);
-                    // if (newName && newName.trim() !== "") {
-                    //   renameChat(chat.id, newName.trim());
-                    // }
+                    const newName = window.prompt("Enter new chat name:", chat.name);
+                    if (newName && newName.trim() !== "") {
+                      renameChat(chat.id, newName.trim());
+                    }
                   }}
                   aria-label={`Rename chat ${chat.name}`}
                   title="Rename chat"
