@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AppContext } from '../../context/Context';
-import { FiPaperclip, FiSend, FiSun, FiMoon, FiSettings, FiMic, FiSquare } from 'react-icons/fi';
+import { FiPaperclip, FiSend, FiSun, FiMoon, FiSettings, FiMic, FiSquare, FiImage, FiCopy, FiCheck } from 'react-icons/fi';
 import './ChatWindow.css';
 
 const ChatWindow = () => {
@@ -15,6 +15,7 @@ const ChatWindow = () => {
     isLoading,
     sendMessage,
     stopGeneration,
+    generateImage,
     isSidebarOpen,
     setIsSidebarOpen,
     activeChatId,
@@ -26,6 +27,7 @@ const ChatWindow = () => {
   const [isListening, setIsListening] = React.useState(false);
   const [speechRecognitionError, setSpeechRecognitionError] = React.useState(null);
   const recognitionRef = React.useRef(null);
+  const [copiedKey, setCopiedKey] = React.useState(null);
 
   // User details hardcoded for now
   const userName = "SURAJ GUPTA";
@@ -122,6 +124,17 @@ const ChatWindow = () => {
     scrollToBottom();
   }, [currentMessages, activeChatId, typingBotMessage, isLoading]);
 
+  const handleCopy = async (key, text) => {
+    try {
+      const raw = typeof text === 'string' ? text : String(text ?? '');
+      await navigator.clipboard.writeText(raw);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch (e) {
+      console.error('Copy failed:', e);
+    }
+  };
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -208,8 +221,20 @@ const ChatWindow = () => {
         </div>
       ) : (
         <div className="chat-messages">
-          {currentMessages.map((msg, index) => (
-            <div key={`${activeChatId}-${index}-${msg.sender}`} className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}>
+          {currentMessages.map((msg, index) => {
+            const key = `${activeChatId}-${index}-${msg.sender}`;
+            return (
+            <div key={key} className={`message ${msg.sender} ${msg.error ? 'error' : ''}`}>
+              {msg.sender === 'bot' && msg.text && (
+                <button
+                  className={`copy-button ${copiedKey === key ? 'copied' : ''}`}
+                  onClick={() => handleCopy(key, msg.text)}
+                  aria-label={copiedKey === key ? 'Copied' : 'Copy message'}
+                  title={copiedKey === key ? 'Copied!' : 'Copy'}
+                >
+                  {copiedKey === key ? <FiCheck /> : <FiCopy />}
+                </button>
+              )}
               {msg.fileInfo && (
                 <div className="message-file-info">
                   {msg.fileInfo.previewUrl ? (
@@ -224,7 +249,7 @@ const ChatWindow = () => {
               )}
               {msg.text && (msg.sender === 'bot' ? renderBotMessageContent(msg.text) : <p>{msg.text}</p>)}
             </div>
-          ))}
+          );})}
           {isLoading && (
             <div className="message bot typing-indicator">
               <p>Smart Ai is thinking...</p>
@@ -273,6 +298,18 @@ const ChatWindow = () => {
           }
           disabled={isLoading || isListening}
         />
+        {/* Image generate button shows when there's input text and not listening */}
+        {(!isLoading && !typingBotMessage && !isListening && input.trim()) && (
+          <button
+            className="send-mic-button has-content"
+            onClick={() => generateImage(input)}
+            aria-label="Generate image"
+            title="Generate image from text"
+            disabled={isLoading || isListening}
+          >
+            <FiImage />
+          </button>
+        )}
         {isLoading || typingBotMessage ? (
           <button
             className="send-mic-button has-content"
