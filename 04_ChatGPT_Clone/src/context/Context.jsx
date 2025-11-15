@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useRef } from 'react'; // Added useEffect and useRef
 
-import { runChat } from '../gemini'; // Import runChat from gemini.js
+import { runChat, runImageGeneration } from '../gemini'; // Import runChat and image generation
 
 export const AppContext = createContext();
 
@@ -139,6 +139,15 @@ const AppProvider = ({ children }) => {
       return;
     }
 
+    // Build text-only history prior to adding the new user message
+    const prior = getActiveChatMessages();
+    const mapRole = (sender) => (sender === 'bot' ? 'assistant' : 'user');
+    // Keep a compact window of recent exchanges
+    const history = (prior || [])
+      .map(m => ({ role: mapRole(m.sender), content: typeof m.text === 'string' ? m.text : '' }))
+      .filter(h => h.content && h.content.trim().length > 0)
+      .slice(-12);
+
     const userMessagePayload = {
       text: messageText,
       sender: 'user',
@@ -164,7 +173,7 @@ const AppProvider = ({ children }) => {
       const botResponseText = await runChat(
         messageText,
         currentFileObject ? currentFileObject.file : null,
-        { signal: controller.signal }
+        { signal: controller.signal, history }
       );
       
       if (botResponseText && botResponseText.length > 0) {
@@ -215,6 +224,42 @@ const AppProvider = ({ children }) => {
     }
   };
 
+  // Generate image from prompt and add to chat
+  const generateImage = async (messageText) => {
+    const prompt = (messageText || '').trim();
+    if (!prompt) return;
+
+    // Add the user's prompt message to the chat
+    addMessageToActiveChat({ text: prompt, sender: 'user' });
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const objectUrl = await runImageGeneration(prompt, { signal: controller.signal });
+      if (objectUrl) {
+        const botImageMessage = {
+          text: 'Here is your generated image.',
+          sender: 'bot',
+          fileInfo: { name: 'generated.png', type: 'image/png', previewUrl: objectUrl },
+        };
+        addMessageToActiveChat(botImageMessage);
+      } else {
+        addMessageToActiveChat({ text: "Sorry, I couldn't generate the image.", sender: 'bot', error: true });
+      }
+    } catch (error) {
+      console.error('Error generating image:', error);
+      const msg = error?.message?.includes('OPENAI_API_KEY')
+        ? 'Image generation not configured. Set OPENAI_API_KEY on the server.'
+        : "Sorry, I couldn't generate the image.";
+      addMessageToActiveChat({ text: msg, sender: 'bot', error: true });
+    } finally {
+      setIsLoading(false);
+      abortRef.current = null;
+    }
+  };
+
   const stopGeneration = () => {
     // Abort in-flight fetch
     if (abortRef.current) {
@@ -257,6 +302,7 @@ const AppProvider = ({ children }) => {
       renameChat,
       deleteChat, // Add deleteChat to context
   stopGeneration,        // Provide stop control
+        generateImage,        // Provide image generation
       // isListening, // Removed
       // setIsListening, // Removed
       // speechRecognitionError, // Removed
