@@ -220,6 +220,7 @@
   word-wrap: break-word;
   box-shadow: 0 1px 2px var(--shadow-color);
   line-height: 1.6;
+  position: relative; /* allow absolute-positioned tools */
 }
 
 .message.user {
@@ -298,6 +299,35 @@
 .typing-indicator p {
   color: var(--text-secondary);
   font-style: italic;
+}
+
+/* Copy button on bot messages */
+.copy-button {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  padding: 4px;
+  border-radius: 4px;
+  transition: opacity 0.15s ease-in-out, color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.message.bot:hover .copy-button {
+  opacity: 1;
+}
+
+.copy-button:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.copy-button.copied {
+  color: #28a745; /* green */
+  opacity: 1;
 }
 
 /* Chat Input Area */
